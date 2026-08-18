@@ -21,13 +21,17 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-%mpzac0)ea@!j0bqh6@t5kwgjq
 # Set DEBUG from env (default True for local, set False on production server)
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
-# Allowed Hosts
+# Allowed Hosts & Cloud Serverless Domains
 allowed_hosts_env = os.getenv('ALLOWED_HOSTS', '*')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
+if '*' not in ALLOWED_HOSTS and '.vercel.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.extend(['.vercel.app', 'localhost', '127.0.0.1'])
 
 # CSRF Trusted Origins for HTTPS Production Domains
-csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000')
+csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000,https://*.vercel.app')
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_env.split(',') if o.strip()]
+if 'https://*.vercel.app' not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append('https://*.vercel.app')
 
 # Application definition
 INSTALLED_APPS = [
@@ -107,11 +111,13 @@ if DATABASE_URL:
         )
     }
 else:
-    # Local Development SQLite
+    # Local Development or Vercel Serverless SQLite
+    is_vercel = os.getenv('VERCEL') == '1'
+    db_path = Path('/tmp/db.sqlite3') if is_vercel else (BASE_DIR / 'db.sqlite3')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': db_path,
         }
     }
 
