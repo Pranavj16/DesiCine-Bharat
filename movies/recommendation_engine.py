@@ -1,9 +1,16 @@
 import re
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import math
+from collections import Counter
 from django.db.models import Q
 from .models import Movie, Review
 from bookings.models import Booking
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    HAS_SKLEARN = True
+except ImportError:
+    HAS_SKLEARN = False
 
 class BollywoodRecommendationEngine:
     """
@@ -57,7 +64,7 @@ class BollywoodRecommendationEngine:
     @staticmethod
     def _create_movie_soup(movie):
         """
-        Creates a high-precision weighted metadata string for TF-IDF vectorization.
+        Creates a high-precision weighted metadata string for vectorization.
         Theme tags and genres are heavily weighted.
         """
         tags = (movie.theme_tags or '').replace(',', ' ')
@@ -73,6 +80,25 @@ class BollywoodRecommendationEngine:
             movie.description or ''
         ]
         return " ".join(soup_parts).lower()
+
+    @staticmethod
+    def _calculate_cosine_similarity(text1, text2):
+        """
+        Zero-dependency pure-Python Cosine Vector Similarity.
+        Guarantees serverless compatibility without external dependencies.
+        """
+        words1 = re.findall(r'\b\w+\b', text1.lower())
+        words2 = re.findall(r'\b\w+\b', text2.lower())
+        c1 = Counter(words1)
+        c2 = Counter(words2)
+        intersection = set(c1.keys()) & set(c2.keys())
+        numerator = sum([c1[x] * c2[x] for x in intersection])
+        sum1 = sum([c1[x]**2 for x in c1.keys()])
+        sum2 = sum([c2[x]**2 for x in c2.keys()])
+        denominator = math.sqrt(sum1) * math.sqrt(sum2)
+        if not denominator:
+            return 0.0
+        return float(numerator) / denominator
 
     @classmethod
     def get_content_based_recommendations(cls, movie_id, top_n=6):
@@ -96,206 +122,173 @@ class BollywoodRecommendationEngine:
         target_movie = movies[target_idx]
         target_tags = set(w.lower() for w in (target_movie.theme_tags or '').replace(',', ' ').split() if len(w) > 2)
         target_genres = set(w.lower() for w in target_movie.genre.replace(',', ' ').split() if len(w) > 2)
+        target_soup = cls._create_movie_soup(target_movie)
 
-        # Build corpus
-        corpus = [cls._create_movie_soup(m) for m in movies]
+        scored_movies = []
 
-        try:
-            tfidf = TfidfVectorizer(stop_words='english', token_pattern=r'(?u)\b\w+\b', ngram_range=(1, 2))
-            tfidf_matrix = tfidf.fit_transform(corpus)
-            cosine_sim = cosine_similarity(tfidf_matrix[target_idx], tfidf_matrix).flatten()
+        if HAS_SKLEARN:
+            try:
+                corpus = [cls._create_movie_soup(m) for m in movies]
+                tfidf = TfidfVectorizer(stop_words='english', token_pattern=r'(?u)\b\w+\b', ngram_range=(1, 2))
+                tfidf_matrix = tfidf.fit_transform(corpus)
+                cosine_sim = cosine_similarity(tfidf_matrix[target_idx], tfidf_matrix).flatten()
+            except Exception:
+                cosine_sim = [cls._calculate_cosine_similarity(target_soup, cls._create_movie_soup(m)) for m in movies]
+        else:
+            cosine_sim = [cls._calculate_cosine_similarity(target_soup, cls._create_movie_soup(m)) for m in movies]
 
-            scored_movies = []
-            for idx, score in enumerate(cosine_sim):
-                if idx == target_idx:
-                    continue
-                candidate = movies[idx]
-                candidate_tags = set(w.lower() for w in (candidate.theme_tags or '').replace(',', ' ').split() if len(w) > 2)
-                candidate_genres = set(w.lower() for w in candidate.genre.replace(',', ' ').split() if len(w) > 2)
+        for idx, score in enumerate(cosine_sim):
+            if idx == target_idx:
+                continue
+            candidate = movies[idx]
+            candidate_tags = set(w.lower() for w in (candidate.theme_tags or '').replace(',', ' ').split() if len(w) > 2)
+            candidate_genres = set(w.lower() for w in candidate.genre.replace(',', ' ').split() if len(w) > 2)
 
-                # Overlap boost
-                tag_overlap = len(target_tags.intersection(candidate_tags))
-                genre_overlap = len(target_genres.intersection(candidate_genres))
+            # Overlap boost
+            tag_overlap = len(target_tags.intersection(candidate_tags))
+            genre_overlap = len(target_genres.intersection(candidate_genres))
 
-                if tag_overlap > 0 or genre_overlap > 0 or score > 0.05:
-                    final_score = (score * 5.0) + (tag_overlap * 3.0) + (genre_overlap * 2.0) + (candidate.rating * 0.2)
-                    scored_movies.append((candidate, final_score))
+            if tag_overlap > 0 or genre_overlap > 0 or score > 0.05:
+                rating_val = float(candidate.rating) if candidate.rating is not None else 8.0
+                final_score = (score * 5.0) + (tag_overlap * 3.0) + (genre_overlap * 2.0) + (rating_val * 0.2)
+                scored_movies.append((candidate, final_score))
 
-            scored_movies.sort(key=lambda x: x[1], reverse=True)
+        scored_movies.sort(key=lambda x: x[1], reverse=True)
 
-            seen_ids = set()
-            recs = []
-            for m, _ in scored_movies:
-                if m.id not in seen_ids and m.id != movie_id:
-                    seen_ids.add(m.id)
-                    recs.append(m)
-                if len(recs) >= top_n:
-                    break
+        seen_ids = set()
+        recs = []
+        for m, _ in scored_movies:
+            if m.id not in seen_ids and m.id != movie_id:
+                seen_ids.add(m.id)
+                recs.append(m)
+            if len(recs) >= top_n:
+                break
 
-            return recs
-        except Exception:
-            return list(Movie.objects.exclude(id=movie_id).order_by('-rating')[:top_n])
+        if len(recs) < top_n:
+            fallback = Movie.objects.exclude(id__in=[movie_id] + list(seen_ids)).order_by('-rating')[:top_n - len(recs)]
+            recs.extend(fallback)
+
+        return recs
 
     @classmethod
     def get_booking_recommendations(cls, movie_id, top_n=4):
         """
-        Specialized recommendation method for ticket booking & confirmation flows.
-        Returns high-affinity similar blockbusters to encourage next booking.
+        Specialized recommendation for the ticket booking flow (seat selection & confirmation).
+        Delivers high-affinity, complementary blockbuster suggestions.
         """
-        return cls.get_content_based_recommendations(movie_id=movie_id, top_n=top_n)
+        return cls.get_content_based_recommendations(movie_id, top_n=top_n)
+
+    @classmethod
+    def recommend_by_thematic_topic(cls, topic, limit=12, top_n=None):
+        """
+        Multi-field semantic search across themes, plot synopsis, genre, title, cast, and director.
+        """
+        if top_n is not None:
+            limit = top_n
+
+        topic = (topic or '').strip().lower()
+        if not topic:
+            return cls.get_trending_bollywood_blockbusters(limit)
+
+        q_filter = (
+            Q(theme_tags__icontains=topic) |
+            Q(genre__icontains=topic) |
+            Q(title__icontains=topic) |
+            Q(description__icontains=topic) |
+            Q(cast__icontains=topic) |
+            Q(director__icontains=topic)
+        )
+
+        matched_category = None
+        for cat_name, cat_info in cls.GENRE_TAXONOMY.items():
+            if topic in cat_name.lower() or any(topic == kw or kw in topic for kw in cat_info["keywords"]):
+                matched_category = cat_name
+                break
+
+        if matched_category:
+            cat_keywords = cls.GENRE_TAXONOMY[matched_category]["keywords"]
+            for kw in cat_keywords:
+                q_filter |= Q(theme_tags__icontains=kw) | Q(genre__icontains=kw) | Q(description__icontains=kw)
+
+        matched_movies = Movie.objects.filter(q_filter).distinct()
+        results = list(matched_movies.order_by('-rating')[:limit])
+        if not results:
+            results = list(cls.get_trending_bollywood_blockbusters(limit))
+
+        return results
 
     @classmethod
     def classify_all_movies_by_genre(cls):
         """
-        Classifies all movies in the database into the 7 primary Bollywood genre buckets.
-        Returns a dictionary with genre metadata and list of matching movies.
+        Classifies all movies in the database into the 7 primary Indian cinema taxonomies.
         """
         all_movies = list(Movie.objects.all())
         classified = {}
 
-        for genre_name, meta in cls.GENRE_TAXONOMY.items():
-            matched_movies = []
-            seen_ids = set()
-            keywords = meta["keywords"]
+        for genre_name, info in cls.GENRE_TAXONOMY.items():
+            keywords = info["keywords"]
+            genre_movies = []
 
             for movie in all_movies:
-                text_to_check = f"{movie.genre} {movie.theme_tags} {movie.title} {movie.description}".lower()
-                
-                # Check keyword matches
-                match_count = sum(1 for kw in keywords if kw in text_to_check)
-                if match_count > 0 and movie.id not in seen_ids:
-                    seen_ids.add(movie.id)
-                    matched_movies.append((movie, match_count, movie.rating))
+                haystack = f"{movie.genre or ''} {movie.theme_tags or ''} {movie.description or ''} {movie.title}".lower()
+                if any(kw in haystack for kw in keywords):
+                    genre_movies.append(movie)
 
-            # Sort by match strength and rating
-            matched_movies.sort(key=lambda x: (x[1], x[2]), reverse=True)
+            genre_movies.sort(key=lambda m: m.rating, reverse=True)
             classified[genre_name] = {
-                "icon": meta["icon"],
-                "description": meta["description"],
-                "count": len(matched_movies),
-                "movies": [m[0] for m in matched_movies]
+                "icon": info["icon"],
+                "description": info["description"],
+                "count": len(genre_movies),
+                "movies": genre_movies
             }
 
         return classified
 
     @classmethod
-    def get_topic_or_theme_recommendations(cls, topic_query, top_n=8):
+    def get_user_personalized_recommendations(cls, user, top_n=6):
         """
-        AI Semantic Topic & Mood Matcher:
-        Recommends movies strictly matching the user's selected topic.
-        """
-        if not topic_query:
-            return cls.get_trending_bollywood_blockbusters(top_n)
-
-        topic_clean = topic_query.lower().strip()
-        all_movies = list(Movie.objects.all())
-
-        topic_synonyms = {
-            'education': ['education', 'upsc', 'student', 'school', 'college', 'engineering', 'maths', 'teacher', 'ias', 'ips', 'exam', 'coaching', 'study', 'restart'],
-            'upsc': ['upsc', 'ias', 'ips', 'civil services', 'restart', 'exam', 'education', 'aspirant', 'student'],
-            'crime': ['crime', 'mafia', 'gangster', 'underworld', 'cartel', 'violence', 'shootout', 'syndicate', 'smuggling', 'narcotics', 'dhanbad'],
-            'horror': ['horror', 'ghost', 'bhoot', 'chanderi', 'manjulika', 'munjya', 'bhediya', 'hastar', 'supernatural', 'monster', 'folklore', 'curse'],
-            'patriotism': ['patriotism', 'army', 'military', 'war', 'surgical strike', 'kargil', 'fighter', 'air force', 'raw', 'spy', 'soldier', 'nation', 'flag'],
-            'sports': ['sports', 'wrestling', 'cricket', 'hockey', 'athletics', 'flying sikh', 'world cup', 'biopic', 'olympics', 'guna caves', 'survival', 'coach'],
-            'mythology': ['mythology', 'kalki', 'mahabharata', 'panjurli', 'daiva', 'guliga', 'lord hanuman', 'astraverse', 'god', 'brahmashira', 'baahubali'],
-            'romance': ['romance', 'love', 'ddlj', 'geet', 'raj simran', 'wedding', 'feel good', 'musical', 'aashiqui', 'heartbreak', 'romantic comedy', 'classic']
-        }
-
-        keywords = [topic_clean]
-        for key, syn_list in topic_synonyms.items():
-            if key in topic_clean or topic_clean in key:
-                keywords = syn_list
-                break
-
-        scored_candidates = []
-        for m in all_movies:
-            m_text = f"{m.genre} {m.theme_tags} {m.title} {m.tagline} {m.description}".lower()
-            match_score = 0.0
-
-            for kw in keywords:
-                if kw in (m.theme_tags or '').lower():
-                    match_score += 4.0
-                if kw in m.genre.lower():
-                    match_score += 3.0
-                if kw in m.title.lower():
-                    match_score += 3.0
-                if kw in (m.tagline or '').lower() or kw in (m.description or '').lower():
-                    match_score += 1.0
-
-            if match_score >= 1.0:
-                final_rank = match_score + (float(m.rating) * 0.5)
-                scored_candidates.append((m, final_rank))
-
-        scored_candidates.sort(key=lambda x: x[1], reverse=True)
-
-        seen_ids = set()
-        results = []
-        for m, _ in scored_candidates:
-            if m.id not in seen_ids:
-                seen_ids.add(m.id)
-                results.append(m)
-            if len(results) >= top_n:
-                break
-
-        return results
-
-    @classmethod
-    def get_user_personalized_recommendations(cls, user=None, top_n=6):
-        """
-        AI Affinity based on user's past bookings & ratings.
+        Hybrid user recommendation based on past bookings and rating affinities.
         """
         if not user or not user.is_authenticated:
-            return cls.get_trending_bollywood_blockbusters(top_n)
+            return cls.get_trending_bollywood_blockbusters(limit=top_n)
 
-        user_bookings = Booking.objects.filter(user=user).select_related('showtime__movie')
-        booked_movies = [b.showtime.movie for b in user_bookings if b.showtime and b.showtime.movie]
+        booked_movies = Movie.objects.filter(
+            showtimes__bookings__user=user,
+            showtimes__bookings__booking_status='CONFIRMED'
+        ).distinct()
 
-        if not booked_movies:
-            return cls.get_trending_bollywood_blockbusters(top_n)
+        if not booked_movies.exists():
+            return cls.get_trending_bollywood_blockbusters(limit=top_n)
 
-        booked_tags = []
+        user_genres = []
+        user_tags = []
         for m in booked_movies:
+            user_genres.extend([g.strip() for g in m.genre.split(',') if g.strip()])
             if m.theme_tags:
-                booked_tags.extend(m.theme_tags.lower().split(','))
-            if m.genre:
-                booked_tags.extend(m.genre.lower().split(','))
+                user_tags.extend([t.strip() for t in m.theme_tags.split(',') if t.strip()])
 
-        booked_movie_ids = {m.id for m in booked_movies}
-        all_movies = Movie.objects.exclude(id__in=booked_movie_ids)
+        booked_ids = list(booked_movies.values_list('id', flat=True))
+        q = Q()
+        for g in set(user_genres):
+            q |= Q(genre__icontains=g)
+        for t in set(user_tags):
+            q |= Q(theme_tags__icontains=t)
 
-        scored = []
-        for m in all_movies:
-            m_text = f"{m.theme_tags} {m.genre}".lower()
-            affinity = sum(1 for tag in booked_tags if tag.strip() in m_text)
-            score = (affinity * 2.0) + (float(m.rating) * 0.5)
-            scored.append((m, score))
+        recs = Movie.objects.filter(q).exclude(id__in=booked_ids).distinct().order_by('-rating')[:top_n]
+        if len(recs) < top_n:
+            more = Movie.objects.exclude(id__in=booked_ids).exclude(id__in=[r.id for r in recs]).order_by('-rating')[:top_n - len(recs)]
+            recs = list(recs) + list(more)
 
-        scored.sort(key=lambda x: x[1], reverse=True)
-        seen_ids = set()
-        results = []
-        for m, _ in scored:
-            if m.id not in seen_ids:
-                seen_ids.add(m.id)
-                results.append(m)
-            if len(results) >= top_n:
-                break
+        return recs
 
-        return results
+    # Alias for views compatibility
+    get_topic_or_theme_recommendations = recommend_by_thematic_topic
 
-    @staticmethod
-    def get_trending_bollywood_blockbusters(top_n=8):
-        """Returns top rated & trending Indian blockbuster films with strict deduplication."""
-        movies = list(Movie.objects.filter(is_trending=True).order_by('-rating', '-tomatometer')[:top_n * 2])
-        if len(movies) < top_n:
-            movies += list(Movie.objects.order_by('-rating')[:top_n * 2])
-
-        seen_ids = set()
-        unique_hits = []
-        for m in movies:
-            if m.id not in seen_ids:
-                seen_ids.add(m.id)
-                unique_hits.append(m)
-            if len(unique_hits) >= top_n:
-                break
-
-        return unique_hits
+    @classmethod
+    def get_trending_bollywood_blockbusters(cls, limit=8, top_n=None):
+        """
+        Returns top trending blockbusters.
+        """
+        if top_n is not None:
+            limit = top_n
+        return list(Movie.objects.all().order_by('-rating')[:limit])
