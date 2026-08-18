@@ -1,6 +1,7 @@
 """
 WSGI config for DesiCine Cinema project.
 Exposes WSGI callable as `application` for Gunicorn and `app` for Vercel Serverless Functions.
+Includes automatic cloud database self-healing & migration for fresh serverless deployments.
 """
 
 import os
@@ -10,18 +11,26 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
-# If running on Vercel Serverless environment and using SQLite fallback, copy db to /tmp
-BASE_DIR = Path(__file__).resolve().parent.parent
-if os.getenv('VERCEL') == '1' and not os.getenv('DATABASE_URL'):
-    tmp_db = Path('/tmp/db.sqlite3')
-    local_db = BASE_DIR / 'db.sqlite3'
-    if local_db.exists() and not tmp_db.exists():
-        try:
-            shutil.copy2(local_db, tmp_db)
-        except Exception:
-            pass
-
+# 1. Initialize Django WSGI application
 application = get_wsgi_application()
+
+# 2. Serverless Cloud Database Auto-Migration & Seeding
+# Automatically detects if tables exist in the connected database (PostgreSQL/Supabase/Neon/SQLite)
+# and runs migrate + seed_data if the database is newly created.
+try:
+    from django.db import connection
+    from django.core.management import call_command
+
+    tables = connection.introspection.table_names()
+    if 'movies_movie' not in tables:
+        print("⚡ [DesiCine Cloud] Fresh database detected! Running auto-migrations...")
+        call_command('migrate', interactive=False)
+        print("🎬 [DesiCine Cloud] Auto-seeding 48 Indian blockbusters & multiplexes...")
+        from seed_bollywood_data import seed_data
+        seed_data()
+        print("✅ [DesiCine Cloud] Database populated successfully!")
+except Exception as e:
+    print(f"⚠️ [DesiCine Cloud] Auto-init notice: {e}")
 
 # Vercel serverless entrypoint
 app = application
