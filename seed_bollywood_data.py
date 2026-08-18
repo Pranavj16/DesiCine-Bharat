@@ -772,7 +772,7 @@ def seed_data():
             "is_now_showing": True,
             "is_bollywood_hit": True,
             "release_date": date(2022, 9, 9),
-            "poster": "/static/posters/brahmāstra_part_one__shiva.jpg",
+            "poster": "/static/posters/brahmastra_part_one_shiva.jpg",
             "backdrop": "https://image.tmdb.org/t/p/w1280/5LtSjMNw6j3LkG29Oa4O0iY5U8.jpg"
         },
         {
