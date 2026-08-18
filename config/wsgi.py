@@ -16,7 +16,7 @@ application = get_wsgi_application()
 
 # 2. Serverless Cloud Database Auto-Migration & Seeding
 # Automatically detects if tables exist in the connected database (PostgreSQL/Supabase/Neon/SQLite)
-# and runs migrate + seed_data if the database is newly created.
+# and runs migrate + seed_data if the database is newly created or missing records.
 try:
     from django.db import connection
     from django.core.management import call_command
@@ -29,6 +29,12 @@ try:
         from seed_bollywood_data import seed_data
         seed_data()
         print("✅ [DesiCine Cloud] Database populated successfully!")
+    else:
+        from movies.models import Movie
+        if Movie.objects.count() < 20:
+            print("🎬 [DesiCine Cloud] Movie records missing/incomplete! Seeding data...")
+            from seed_bollywood_data import seed_data
+            seed_data()
 except Exception as e:
     print(f"⚠️ [DesiCine Cloud] Auto-init notice: {e}")
 
