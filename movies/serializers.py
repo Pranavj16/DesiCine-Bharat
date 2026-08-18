@@ -16,6 +16,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class MovieListSerializer(serializers.ModelSerializer):
+    poster = serializers.SerializerMethodField()
+
     class Meta:
         model = Movie
         fields = [
@@ -24,10 +26,16 @@ class MovieListSerializer(serializers.ModelSerializer):
             'is_trending', 'is_now_showing', 'is_bollywood_hit'
         ]
 
+    def get_poster(self, obj):
+        if obj.poster and ('brahm' in obj.poster.lower() or 'brahm' in obj.title.lower()):
+            return '/static/posters/brahmastra_part_one_shiva.jpg'
+        return obj.poster
+
 
 class MovieDetailSerializer(serializers.ModelSerializer):
     reviews = ReviewSerializer(many=True, read_only=True)
     similar_movies = serializers.SerializerMethodField()
+    poster = serializers.SerializerMethodField()
 
     class Meta:
         model = Movie
@@ -38,6 +46,11 @@ class MovieDetailSerializer(serializers.ModelSerializer):
             'music_director', 'is_trending', 'is_now_showing', 'is_bollywood_hit',
             'reviews', 'similar_movies'
         ]
+
+    def get_poster(self, obj):
+        if obj.poster and ('brahm' in obj.poster.lower() or 'brahm' in obj.title.lower()):
+            return '/static/posters/brahmastra_part_one_shiva.jpg'
+        return obj.poster
 
     def get_similar_movies(self, obj):
         from .recommendation_engine import BollywoodRecommendationEngine

@@ -135,6 +135,11 @@ class MovieViewSet(viewsets.ModelViewSet):
 # ==================== TEMPLATE VIEWS ====================
 
 def home(request):
+    try:
+        Movie.objects.filter(title__icontains='Brahm').update(poster='/static/posters/brahmastra_part_one_shiva.jpg')
+    except Exception:
+        pass
+
     hero_12th = Movie.objects.filter(title__icontains='12th Fail').first() or Movie.objects.first()
     hero_stree = Movie.objects.filter(title__icontains='Stree 2').first() or Movie.objects.filter(title__icontains='Stree').first() or Movie.objects.last()
     now_showing = Movie.objects.filter(is_now_showing=True)[:16]
