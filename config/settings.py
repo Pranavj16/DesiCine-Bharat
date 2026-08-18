@@ -147,13 +147,16 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images, Authentic Posters)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Whitenoise Static Storage for high performance caching in production
+# WhiteNoise settings for serverless & production
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MANIFEST_STRICT = False
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
