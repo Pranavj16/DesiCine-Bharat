@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Seat Selection | DesiCine Cinema</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              gold: { 400: "#FBBF24", 500: "#F59E0B", 600: "#D97706" },
+              crimson: { 500: "#E11D48", 600: "#BE123C", 700: "#9F1239" },
+              desi: { dark: "#0B090A", card: "#16161A", surface: "#212126" }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body {
+            background-color: #0B090A;
+            color: #F3F4F6;
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 50% 10%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+        }
+        /* Pinterest Inspired Projector Screen Glow */
+        .projector-beam {
+            width: 80%;
+            height: 50px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.35) 0%, rgba(245, 158, 11, 0) 100%);
+            clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+            border-top: 3px solid #F59E0B;
+            filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.6));
+        }
+        .crimson-gradient-btn {
+            background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
+        }
+        .seat {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .seat:hover:not(.booked) {
+            transform: translateY(-3px) scale(1.15);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .seat.selected {
+            background-color: #F59E0B !important;
+            color: #000 !important;
+            border-color: #F59E0B !important;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.9);
+            transform: scale(1.1);
+        }
+        .seat.booked {
+            background-color: #2D2D35 !important;
+            border-color: #3F3F46 !important;
+            color: #71717A !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+<!-- Top Bar -->
+<header class="bg-[#0B090A]/95 backdrop-blur-xl border-b border-white/10 py-4 px-6 fixed top-0 w-full z-40">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'home' %}" class="text-gray-400 hover:text-white flex items-center gap-1 text-sm font-semibold transition">
+                <span class="material-symbols-outlined">arrow_back</span> Back
+            </a>
+            <div class="border-l border-white/10 pl-4">
+                <h1 id="movieTitle" class="text-base md:text-lg font-black text-white leading-tight">Loading Movie...</h1>
+                <p id="showtimeMeta" class="text-xs text-gold-400 font-semibold">Multiplex & Showtime</p>
+            </div>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-5 text-xs">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded border border-gray-600 bg-desi-surface"></div>
+                <span class="text-gray-400 font-medium">Available</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded bg-gold-500 shadow-md"></div>
+                <span class="text-white font-bold">Selected</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded bg-zinc-700"></div>
+                <span class="text-gray-500 font-medium">Booked</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Seat Layout Area -->
+<main class="max-w-4xl mx-auto px-4 pt-28 pb-32 w-full flex-1 flex flex-col items-center">
+    <!-- Screen Projector Visual (Pinterest Inspired) -->
+    <div class="projector-beam mb-10"></div>
+    <p class="text-center text-[10px] uppercase tracking-widest text-gold-500 font-bold -mt-8 mb-8">
+        All eyes this way • 70mm Curved Silver Screen
+    </p>
+
+    <!-- Seat Map Container -->
+    <div id="seatGridContainer" class="w-full max-w-2xl bg-desi-card/60 p-6 md:p-8 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-xl">
+        <div id="seatGrid" class="space-y-6">
+            <div class="text-center py-12 text-gray-500">Loading interactive seat layout...</div>
+        </div>
+
+        {% if recommended_movies %}
+        <!-- AI RECOMMENDATION ENGINE IN BOOKING: Complementary shows -->
+        <div class="mt-12 pt-8 border-t border-white/10 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-gold-500 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">psychology</span>
+                        AI Recommended Thematic Matches
+                    </span>
+                    <h3 class="font-cinzel text-sm text-white font-bold">Similar To {{ showtime.movie.title }}</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                {% for rm in recommended_movies %}
+                <div class="bg-desi-card rounded-xl p-2.5 border border-white/5 hover:border-gold-500/50 transition flex flex-col justify-between group">
+                    <div class="aspect-[2/3] rounded-lg overflow-hidden relative mb-2">
+                        <img src="{{ rm.poster }}" alt="{{ rm.title }}" class="w-full h-full object-cover group-hover:scale-105 transition"/>
+                        <div class="absolute top-1 right-1 bg-black/80 px-1 py-0.5 rounded text-[9px] font-black text-gold-400">
+                            ★ {{ rm.rating }}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-white truncate">{{ rm.title }}</h4>
+                        <p class="text-[9px] text-gray-400 truncate">{{ rm.genre }}</p>
+                        <a href="/movie/{{ rm.id }}/" class="block w-full bg-gold-500 hover:bg-gold-600 text-black text-center text-[9px] font-black py-1 rounded mt-1.5 transition">
+                            View Shows
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</main>
+
+<!-- Bottom Sticky Action Bar (Pinterest Floating Pill Design) -->
+<footer class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-4xl bg-[#16161A]/95 backdrop-blur-2xl border border-gold-500/30 py-4 px-6 z-40 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-gray-400">Selected:</span>
+                <div id="selectedSeatTags" class="flex flex-wrap gap-1.5">
+                    <span class="text-xs text-gray-500 italic">No seat chosen</span>
+                </div>
+            </div>
+            <div class="flex items-baseline gap-2 mt-1">
+                <span class="text-xs text-gray-400">Total Price:</span>
+                <span id="totalPrice" class="text-2xl font-black text-gold-400">₹0.00</span>
+                <span class="text-[10px] text-gray-500">(Base Fare in INR)</span>
+            </div>
+        </div>
+
+        <button id="proceedBtn" onclick="proceedToCheckout()" disabled class="crimson-gradient-btn disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black text-xs tracking-wider uppercase flex items-center gap-2 transition">
+            <span>Proceed to Canteen & Pay</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+    </div>
+</footer>
+
+<script>
+const showtimeId = {{ showtime.id|default:"1" }};
+let selectedSeats = [];
+let showtimeData = null;
+
+async function loadSeatLayout() {
+    try {
+        const res = await fetch(`/api/showtimes/${showtimeId}/`);
+        const data = await res.json();
+        showtimeData = data;
+
+        document.getElementById('movieTitle').innerText = `${data.movie.title} (${data.language})`;
+        document.getElementById('showtimeMeta').innerText = `${data.theater.name}, ${data.theater.city} • ${data.show_date} at ${data.show_time.slice(0, 5)} • ${data.format}`;
+
+        renderSeatGrid(data.seat_layout);
+    } catch (e) {
+        console.error("Error loading seat layout:", e);
+    }
+}
+
+function renderSeatGrid(seats) {
+    const grid = document.getElementById('seatGrid');
+    if (!seats || seats.length === 0) {
+        grid.innerHTML = '<div class="text-center text-gray-400">No seats found for this screen.</div>';
+        return;
+    }
+
+    const rows = {};
+    seats.forEach(s => {
+        if (!rows[s.row]) rows[s.row] = [];
+        rows[s.row].push(s);
+    });
+
+    let html = '';
+
+    // Recliner Section
+    if (rows['A']) {
+        html += `
+            <div class="space-y-3 border-b border-white/10 pb-5">
+                <div class="flex items-center justify-between text-[11px] font-black text-gold-400 px-2 uppercase tracking-wider">
+                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">airline_seat_recline_extra</span> ROYAL VIP RECLINER</span>
+                    <span>₹${showtimeData.recliner_price}</span>
+                </div>
+                <div class="flex justify-center gap-3">
+                    ${renderRowSeats(rows['A'])}
+                </div>
+            </div>
+        `;
+    }
+
+    // Gold Section
+    const goldRows = ['B', 'C', 'D'].filter(r => rows[r]);
+    if (goldRows.length > 0) {
+        html += `
+            <div class="space-y-3 border-b border-white/10 py-4">
+                <div class="flex items-center justify-between text-[11px] font-black text-gray-300 px-2 uppercase tracking-wider">
+                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">stars</span> GOLD PRIME (CENTER AUDITORIUM)</span>
+                    <span>₹${showtimeData.gold_price}</span>
+                </div>
+                ${goldRows.map(r => `
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="w-4 text-xs font-black text-gold-500/80 text-right mr-2">${r}</span>
+                        <div class="flex gap-2">${renderRowSeats(rows[r])}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // Silver Section
+    const silverRows = ['E', 'F', 'G', 'H'].filter(r => rows[r]);
+    if (silverRows.length > 0) {
+        html += `
+            <div class="space-y-3 py-4">
+                <div class="flex items-center justify-between text-[11px] font-black text-gray-400 px-2 uppercase tracking-wider">
+                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">chair</span> SILVER ACOUSTIC CLASS</span>
+                    <span>₹${showtimeData.silver_price}</span>
+                </div>
+                ${silverRows.map(r => `
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="w-4 text-xs font-black text-gray-500 text-right mr-2">${r}</span>
+                        <div class="flex gap-2">${renderRowSeats(rows[r])}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    grid.innerHTML = html;
+}
+
+function renderRowSeats(seatList) {
+    return seatList.map(s => {
+        const isSelected = selectedSeats.some(sel => sel.id === s.id);
+        const bookedClass = s.is_booked ? 'booked' : '';
+        const selectedClass = isSelected ? 'selected' : '';
+        const extraStyle = s.type === 'RECLINER' ? 'w-10 h-10 rounded-xl border-2 border-gold-500/50 text-xs font-black' : 'w-7 h-7 rounded-lg border border-gray-600 text-[10px] font-bold';
+
+        return `
+            <button
+                onclick="toggleSeat(${s.id}, '${s.row}', ${s.number}, ${s.price}, '${s.type}', ${s.is_booked})"
+                class="seat ${bookedClass} ${selectedClass} ${extraStyle} flex items-center justify-center bg-desi-surface text-gray-300"
+                ${s.is_booked ? 'disabled' : ''}
+                title="${s.row}${s.number} (₹${s.price})">
+                ${s.number}
+            </button>
+        `;
+    }).join('');
+}
+
+function toggleSeat(id, row, number, price, type, isBooked) {
+    if (isBooked) return;
+
+    const existingIdx = selectedSeats.findIndex(s => s.id === id);
+    if (existingIdx >= 0) {
+        selectedSeats.splice(existingIdx, 1);
+    } else {
+        if (selectedSeats.length >= 8) {
+            alert("Maximum 8 seats allowed per booking!");
+            return;
+        }
+        selectedSeats.push({ id, row, number, price, type });
+    }
+
+    updateUI();
+    renderSeatGrid(showtimeData.seat_layout);
+}
+
+function updateUI() {
+    const totalPrice = selectedSeats.reduce((acc, s) => acc + s.price, 0);
+    document.getElementById('totalPrice').innerText = `₹${totalPrice.toFixed(2)}`;
+
+    const tagContainer = document.getElementById('selectedSeatTags');
+    if (selectedSeats.length === 0) {
+        tagContainer.innerHTML = '<span class="text-xs text-gray-500 italic">No seat chosen</span>';
+        document.getElementById('proceedBtn').disabled = true;
+    } else {
+        tagContainer.innerHTML = selectedSeats.map(s => `
+            <span class="bg-gold-500 text-black text-[11px] font-black px-2 py-0.5 rounded shadow">
+                ${s.row}${s.number}
+            </span>
+        `).join('');
+        document.getElementById('proceedBtn').disabled = false;
+    }
+}
+
+function proceedToCheckout() {
+    if (selectedSeats.length === 0) return;
+
+    const seatIds = selectedSeats.map(s => s.id).join(',');
+    sessionStorage.setItem('desicine_selected_seats', JSON.stringify(selectedSeats));
+    sessionStorage.setItem('desicine_showtime', JSON.stringify(showtimeData));
+
+    window.location.href = `/checkout/?showtime_id=${showtimeId}&seat_ids=${seatIds}`;
+}
+
+document.addEventListener('DOMContentLoaded', loadSeatLayout);
+</script>
+
+</body>
+</html>

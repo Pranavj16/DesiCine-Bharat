@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sign In | DesiCine Bollywood Experience</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              gold: { 400: "#FBBF24", 500: "#F59E0B", 600: "#D97706" },
+              crimson: { 500: "#E11D48", 600: "#BE123C", 700: "#9F1239" },
+              desi: { dark: "#0B090A", card: "#16161A", surface: "#212126" }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #0B090A; color: #F3F4F6; font-family: 'Inter', sans-serif; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .crimson-gradient-btn {
+            background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
+            box-shadow: 0 4px 20px rgba(225, 29, 72, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-tr from-[#0B090A] via-[#161418] to-[#0B090A]">
+
+<div class="max-w-md w-full bg-desi-card p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+    <div class="text-center space-y-2">
+        <a href="{% url 'home' %}" class="inline-block">
+            <span class="text-2xl font-black font-cinzel gold-gradient-text">DESICINE</span>
+            <span class="bg-crimson-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded ml-1">BHARAT</span>
+        </a>
+        <h2 class="text-xl font-black font-montserrat text-white">Welcome Back, Film Lover!</h2>
+        <p class="text-xs text-gray-400">Sign in to your Bollywood CinePass account</p>
+    </div>
+
+    {% if messages %}
+        <div class="space-y-2">
+            {% for message in messages %}
+                <div class="p-3 rounded-xl text-xs font-semibold {% if message.tags == 'error' %}bg-red-500/20 text-red-400 border border-red-500/30{% else %}bg-green-500/20 text-green-400 border border-green-500/30{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'login' %}" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label class="text-xs font-bold text-gray-400 block mb-1">Username</label>
+            <input type="text" name="username" required value="rahul_sharma" class="w-full bg-desi-surface border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:ring-gold-500 focus:border-gold-500" placeholder="Enter username (e.g. rahul_sharma)"/>
+        </div>
+
+        <div>
+            <label class="text-xs font-bold text-gray-400 block mb-1">Password</label>
+            <input type="password" name="password" required value="password123" class="w-full bg-desi-surface border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:ring-gold-500 focus:border-gold-500" placeholder="Enter password (e.g. password123)"/>
+        </div>
+
+        <button type="submit" class="w-full crimson-gradient-btn text-white py-3.5 rounded-xl font-black text-xs tracking-wider uppercase transition">
+            Sign In to CinePass
+        </button>
+    </form>
+
+    <div class="bg-desi-surface/50 p-3 rounded-xl border border-white/5 text-[11px] text-gray-400 space-y-1">
+        <p class="font-bold text-gold-400">Demo Accounts Available:</p>
+        <p>• User: <span class="text-white">rahul_sharma</span> / <span class="text-white">password123</span></p>
+        <p>• Admin: <span class="text-white">admin</span> / <span class="text-white">admin123</span></p>
+    </div>
+
+    <div class="text-center text-xs text-gray-400">
+        Don't have a CinePass account? <a href="{% url 'signup' %}" class="text-gold-400 font-bold hover:underline">Create Account</a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>DesiCine Bharat | Indian Cinema Experience</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,700&family=Rozha+One&family=Cinzel:wght@700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              vermilion: {
+                400: "#F87171",
+                500: "#E5383B",
+                600: "#BA181B",
+                700: "#660708"
+              },
+              terracotta: {
+                400: "#F4A261",
+                500: "#E07A5F",
+                600: "#C85A32",
+              },
+              haldi: {
+                400: "#FDE047",
+                500: "#F59E0B",
+                600: "#D97706",
+              },
+              cerulean: {
+                500: "#2563EB",
+                600: "#1D4ED8",
+              },
+              desi: {
+                dark: "#0C0A0A",
+                card: "#171415",
+                surface: "#241F21",
+                border: "#3D3437"
+              }
+            },
+            fontFamily: {
+              playfair: ["Playfair Display", "serif"],
+              montserrat: ["Montserrat", "sans-serif"],
+              rozha: ["Rozha One", "serif"],
+              cinzel: ["Cinzel", "serif"],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body {
+            background-color: #0C0A0A;
+            color: #F3EFEF;
+            font-family: 'Montserrat', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, rgba(229, 56, 59, 0.12) 0%, transparent 50%),
+                              radial-gradient(circle at 100% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 40%);
+        }
+        .art-vermilion-btn {
+            background: linear-gradient(135deg, #E5383B 0%, #BA181B 100%);
+            box-shadow: 0 4px 20px rgba(229, 56, 59, 0.45);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .art-vermilion-btn:hover {
+            box-shadow: 0 6px 28px rgba(245, 158, 11, 0.7);
+            transform: translateY(-2px);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF1A8 0%, #F59E0B 50%, #E07A5F 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .illustrated-glass-card {
+            background: rgba(23, 20, 21, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .ranking-number {
+            -webkit-text-stroke: 2px rgba(245, 158, 11, 0.35);
+            color: transparent;
+            font-size: 90px;
+            line-height: 1;
+            font-weight: 900;
+        }
+        .desi-stamp {
+            border: 2px dashed #E5383B;
+            transform: rotate(-2deg);
+        }
+        .topic-pill {
+            transition: all 0.25s ease;
+        }
+        .topic-pill.active {
+            background-color: #F59E0B !important;
+            color: #000 !important;
+            border-color: #F59E0B !important;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+            font-weight: 800;
+        }
+        .genre-tab-btn.active {
+            background: linear-gradient(135deg, #E5383B 0%, #BA181B 100%) !important;
+            color: #FFFFFF !important;
+            border-color: #E5383B !important;
+            box-shadow: 0 4px 15px rgba(229, 56, 59, 0.5);
+        }
+    </style>
+</head>
+<body class="selection:bg-vermilion-500 selection:text-white">
+
+<!-- Top Navigation Bar -->
+<nav class="sticky top-0 z-50 bg-[#0C0A0A]/90 backdrop-blur-xl border-b border-vermilion-500/20 shadow-[0_4px_25px_rgba(229,56,59,0.15)] px-4 md:px-10 py-4">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-8">
+            <a href="{% url 'home' %}" class="flex items-center gap-2 group">
+                <span class="font-rozha text-2xl md:text-3xl gold-gradient-text tracking-wide">DesiCine Bharat</span>
+                <span class="bg-vermilion-500 text-white text-[9px] font-black px-2 py-0.5 rounded tracking-widest uppercase shadow">70MM</span>
+            </a>
+            <div class="hidden lg:flex items-center gap-6 text-xs font-bold text-gray-300">
+                <a href="#genre-classification" class="hover:text-haldi-400 transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">category</span> Genre Classification
+                </a>
+                <a href="#ai-topic-recommendations" class="hover:text-haldi-400 transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">psychology</span> AI Mood Matcher
+                </a>
+                <a href="{% url 'dashboard' %}" class="hover:text-haldi-400 transition">Box Office Analytics</a>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Search Input -->
+            <div class="relative hidden sm:block">
+                <input id="searchInput" onkeyup="fetchMovies()" class="bg-[#141011] border-0 border-b-2 border-vermilion-500/50 text-white focus:ring-0 focus:border-haldi-500 px-4 py-1.5 text-xs w-56 placeholder-gray-400 transition-colors rounded-t-lg" placeholder="Search 12th Fail, 3 Idiots, Jawan..." type="text"/>
+                <span class="material-symbols-outlined absolute right-2 top-2 text-gray-400 text-sm">search</span>
+            </div>
+
+            <a href="{% url 'user_account' %}" class="font-montserrat text-xs font-bold text-haldi-400 border border-haldi-500/50 hover:border-haldi-400 px-4 py-2 rounded-xl hover:bg-haldi-500/10 transition uppercase flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">confirmation_number</span>
+                <span>CinePass VIP</span>
+            </a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'user_account' %}" class="text-xs text-white font-bold flex items-center gap-1.5 bg-desi-surface px-3 py-1.5 rounded-full border border-white/10">
+                    <span class="material-symbols-outlined text-haldi-400 text-[18px]">account_circle</span>
+                    <span class="hidden md:inline">{{ user.username }}</span>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="art-vermilion-btn text-white px-5 py-2 rounded-xl text-xs font-bold transition">Sign In</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<!-- Filters (Tags & Language Pills) -->
+<section class="border-b border-white/5 sticky top-[69px] z-40 bg-[#0C0A0A]/95 backdrop-blur-md px-4 md:px-10 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar w-full md:w-auto">
+            <span class="text-[11px] font-black text-terracotta-400 uppercase mr-1 opacity-90">Genre:</span>
+            <button onclick="filterGenre('All', this)" class="genre-btn px-3.5 py-1 rounded-full border border-vermilion-500 bg-vermilion-500 text-white text-xs font-bold uppercase transition">All</button>
+            <button onclick="filterGenre('Education', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">🎓 Education & UPSC</button>
+            <button onclick="filterGenre('Horror', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">👻 Horror Comedy</button>
+            <button onclick="filterGenre('Crime', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">🕶️ Crime Mafia</button>
+            <button onclick="filterGenre('Patriotism', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">🇮🇳 Patriotism</button>
+            <button onclick="filterGenre('Mythology', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">🕉️ Mythology</button>
+            <button onclick="filterGenre('Sports', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">🏏 Sports</button>
+            <button onclick="filterGenre('Romance', this)" class="genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition">❤️ Romance</button>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto hide-scrollbar w-full md:w-auto">
+            <span class="text-[11px] font-black text-haldi-500 uppercase mr-1 opacity-90">Language:</span>
+            <button onclick="filterLanguage('All', this)" class="lang-btn px-3.5 py-1 rounded-full border border-haldi-500 bg-haldi-500 text-black text-xs font-bold uppercase transition">All</button>
+            <button onclick="filterLanguage('Hindi', this)" class="lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition">Hindi</button>
+            <button onclick="filterLanguage('Telugu', this)" class="lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition">Telugu</button>
+            <button onclick="filterLanguage('Tamil', this)" class="lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition">Tamil</button>
+            <button onclick="filterLanguage('Kannada', this)" class="lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition">Kannada</button>
+            <button onclick="filterLanguage('Malayalam', this)" class="lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition">Malayalam</button>
+        </div>
+    </div>
+</section>
+
+<!-- Dual Hero Section: 12th Fail & Stree 2 -->
+<section class="max-w-7xl mx-auto px-4 md:px-10 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Hero 1: 12th Fail (Education & Restart) -->
+        <div class="illustrated-glass-card rounded-3xl overflow-hidden relative group aspect-[16/10] md:aspect-video lg:aspect-[16/11] border-2 border-vermilion-500/40">
+            <div class="absolute inset-0 bg-cover bg-center opacity-85 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" style="background-image: url('{{ hero_12th.backdrop|default:"https://image.tmdb.org/t/p/w1280/fVV0A67kDjTTQ4CvUn8LoletRmI.jpg" }}');"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0C0A0A] via-[#0C0A0A]/60 to-transparent"></div>
+            
+            <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full space-y-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-haldi-500 text-black text-[11px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shadow">🎓 EDUCATION & UPSC</span>
+                    <div class="flex items-center gap-1 text-haldi-400">
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                        <span class="text-xs font-black text-white">{{ hero_12th.tomatometer|default:98 }}% Audience Score</span>
+                    </div>
+                </div>
+                <h1 class="font-rozha text-3xl md:text-5xl text-white drop-shadow-xl leading-tight">{{ hero_12th.title|default:"12th Fail" }}</h1>
+                <p class="text-xs md:text-sm text-gray-300 line-clamp-2 max-w-lg font-medium drop-shadow">{{ hero_12th.tagline|default:"Restart! Vikrant Massey in Vidhu Vinod Chopra's iconic UPSC journey of raw courage, student struggle & integrity." }}</p>
+                <div class="flex items-center gap-4 pt-1">
+                    <a href="{% if hero_12th %}/movie/{{ hero_12th.id }}/{% else %}#{% endif %}" class="art-vermilion-btn text-white text-xs font-black px-6 py-3.5 rounded-xl flex items-center gap-2">
+                        <span>Quick Book Tickets</span>
+                        <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                    </a>
+                    <span class="text-xs text-haldi-400 font-bold">₹240 Onwards</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero 2: Stree 2 (Horror Comedy) -->
+        <div class="illustrated-glass-card rounded-3xl overflow-hidden relative group aspect-[16/10] md:aspect-video lg:aspect-[16/11] border-2 border-haldi-500/40">
+            <div class="absolute inset-0 bg-cover bg-center opacity-85 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" style="background-image: url('{{ hero_stree.backdrop|default:"https://image.tmdb.org/t/p/w1280/5LtSjMNw6j3LkG29Oa4O0iY5U8.jpg" }}');"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0C0A0A] via-[#0C0A0A]/60 to-transparent"></div>
+            
+            <div class="absolute bottom-0 left-0 p-6 md:p-8 w-full space-y-3">
+                <div class="flex items-center gap-3">
+                    <span class="bg-vermilion-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider shadow">IMAX 3D</span>
+                    <div class="flex items-center gap-1 text-haldi-400">
+                        <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="text-xs font-black text-white">{{ hero_stree.tomatometer|default:94 }}% Audience Score</span>
+                    </div>
+                </div>
+                <h1 class="font-rozha text-3xl md:text-5xl text-white drop-shadow-xl leading-tight">{{ hero_stree.title|default:"Stree 2: Sarkate Ka Aatank" }}</h1>
+                <p class="text-xs md:text-sm text-gray-300 line-clamp-2 max-w-lg font-medium drop-shadow">{{ hero_stree.tagline|default:"O Stree Raksha Karna! Shraddha Kapoor & Rajkummar Rao in India's highest-grossing horror comedy blockbuster." }}</p>
+                <div class="flex items-center gap-4 pt-1">
+                    <a href="{% if hero_stree %}/movie/{{ hero_stree.id }}/{% else %}#{% endif %}" class="art-vermilion-btn text-white text-xs font-black px-6 py-3.5 rounded-xl flex items-center gap-2">
+                        <span>Quick Book Tickets</span>
+                        <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                    </a>
+                    <span class="text-xs text-haldi-400 font-bold">₹240 Onwards</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- GENRE CLASSIFICATION SECTION (Explore 7 Core Indian Cinema Genres) -->
+<section id="genre-classification" class="max-w-7xl mx-auto px-4 md:px-10 py-10 border-t border-white/5">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-vermilion-500 text-[11px] font-black tracking-widest uppercase mb-1">
+                <span class="material-symbols-outlined text-[18px]">category</span>
+                <span>INDIAN CINEMA GENRE CLASSIFICATION</span>
+            </div>
+            <h2 class="font-rozha text-2xl md:text-3xl text-white">
+                Classified Cinema Categories: <span class="gold-gradient-text" id="activeGenreTitle">🎓 Education & Inspirational</span>
+            </h2>
+            <p id="activeGenreDesc" class="text-gray-400 text-xs mt-1">Inspiring journeys of student struggle, IAS/IPS exams, mentorship, and life lessons.</p>
+        </div>
+        <a href="/api/movies/by_genre/" target="_blank" class="text-haldi-400 hover:underline text-xs font-bold flex items-center gap-1 self-start">
+            DRF Genre API <span class="material-symbols-outlined text-sm">arrow_outward</span>
+        </a>
+    </div>
+
+    <!-- Genre Tabs -->
+    <div class="flex items-center gap-2.5 overflow-x-auto hide-scrollbar pb-3 mb-8" id="genreTabsContainer">
+        <!-- Injected via JavaScript from /api/movies/by_genre/ -->
+    </div>
+
+    <!-- Classified Movies Grid -->
+    <div id="genreMoviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+        <div class="col-span-full py-8 text-center text-gray-500">Loading categorized films...</div>
+    </div>
+</section>
+
+<!-- AI TOPIC & THEME RECOMMENDATION ENGINE (Strict Deduplicated Topic Matcher) -->
+<section id="ai-topic-recommendations" class="max-w-7xl mx-auto px-4 md:px-10 py-10 border-t border-white/5">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-haldi-500 text-[11px] font-black tracking-widest uppercase mb-1">
+                <span class="material-symbols-outlined text-[18px]">psychology</span>
+                <span>AI THEME & TOPIC RECOMMENDATION ENGINE</span>
+            </div>
+            <h2 id="aiTopicHeading" class="font-rozha text-2xl md:text-3xl text-white">
+                Recommendations For: <span class="gold-gradient-text" id="activeTopicTitle">🎓 Education & Student Struggle</span>
+            </h2>
+            <p class="text-gray-400 text-xs mt-1">Select any Indian cinema theme or topic below. The machine learning engine computes semantic similarity across plot synopses, characters & themes.</p>
+        </div>
+        <span class="text-[11px] bg-haldi-500/10 text-haldi-400 border border-haldi-500/30 px-3.5 py-1 rounded-full font-bold self-start">
+            ⚡ Multi-Tier ML Theme Matcher
+        </span>
+    </div>
+
+    <!-- Topic & Mood Selector Chips -->
+    <div class="flex items-center gap-2.5 overflow-x-auto hide-scrollbar pb-3 mb-6">
+        <button onclick="fetchTopicRecommendations('Education', this)" class="topic-pill active bg-desi-surface border border-haldi-500 text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+            🎓 Education & Student Struggle
+        </button>
+        <button onclick="fetchTopicRecommendations('UPSC', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            🏛️ UPSC & Civil Services
+        </button>
+        <button onclick="fetchTopicRecommendations('Crime', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            🕶️ Crime & Underworld Mafia
+        </button>
+        <button onclick="fetchTopicRecommendations('Patriotism', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            🇮🇳 Patriotism & Armed Forces
+        </button>
+        <button onclick="fetchTopicRecommendations('Horror', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            👻 Horror Comedy Masala
+        </button>
+        <button onclick="fetchTopicRecommendations('Sports', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            🏏 Sports & Inspiring Biopics
+        </button>
+        <button onclick="fetchTopicRecommendations('Mythology', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            🕉️ Mythology & Epics
+        </button>
+        <button onclick="fetchTopicRecommendations('Romance', this)" class="topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10">
+            ❤️ Romance & Classics
+        </button>
+    </div>
+
+    <!-- Topic Recommendations Cards Grid -->
+    <div id="topicRecommendationsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+        <div class="col-span-full py-8 text-center text-gray-500">Loading AI topic recommendations...</div>
+    </div>
+</section>
+
+<!-- Now Showing Grid with 48 Movies -->
+<section id="now-showing" class="max-w-7xl mx-auto px-4 md:px-10 py-12 border-t border-white/5">
+    <div class="flex items-end justify-between mb-8">
+        <div>
+            <h2 class="font-rozha text-2xl md:text-3xl text-white">Multiplex Showtimes & Complete 48 Films Catalog</h2>
+            <p class="text-gray-400 text-xs mt-1">Authentic Indian films available across Mumbai, Delhi-NCR, Bengaluru, and Hyderabad.</p>
+        </div>
+        <a href="/api/movies/" target="_blank" class="text-haldi-400 hover:underline text-xs font-bold flex items-center gap-1">
+            DRF JSON API <span class="material-symbols-outlined text-sm">arrow_outward</span>
+        </a>
+    </div>
+
+    <div id="moviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+        <!-- Populated dynamically from /api/movies/ -->
+    </div>
+</section>
+
+<!-- Illustrated Indian Street & Chai Tapri Showcase -->
+<section class="max-w-7xl mx-auto px-4 md:px-10 py-12 border-t border-white/5">
+    <div class="relative rounded-3xl overflow-hidden border-2 border-vermilion-500/30 shadow-2xl">
+        <div class="absolute inset-0 bg-cover bg-center brightness-[0.45] scale-105" style="background-image: url('/static/images/indian_street_chai_salon.jpg');"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-[#0C0A0A] via-[#0C0A0A]/85 to-transparent"></div>
+
+        <div class="relative z-10 p-8 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div class="space-y-4 max-w-xl">
+                <div class="inline-block bg-vermilion-500 text-white text-[10px] font-black px-2.5 py-1 rounded tracking-widest uppercase desi-stamp shadow">
+                    चाय टपरी और सिनेमा कैंटीन
+                </div>
+                <h2 class="font-rozha text-3xl md:text-4xl text-white leading-tight">
+                    Dilli 6 Crispy Samosas, Cutting Masala Chai & Retro Ambiance!
+                </h2>
+                <p class="text-gray-300 text-xs md:text-sm leading-relaxed">
+                    Step into the authentic Indian cinema vibe! Sip on slow-brewed hot Masala Chai in traditional clay kulhads, crunch on piping hot samosas with mint chutney, and order direct to your multiplex recliner seat.
+                </p>
+                <div class="pt-2">
+                    <a href="{% url 'checkout' %}" class="bg-haldi-500 hover:bg-haldi-600 text-black px-7 py-3.5 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-lg inline-block">
+                        Order Desi Snack Combos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Indian Food & Chai Showcase Cards -->
+            <div class="grid grid-cols-2 gap-4 shrink-0">
+                <div class="bg-black/80 backdrop-blur-md p-4 rounded-2xl border border-haldi-500/30 text-center shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&auto=format&fit=crop&q=80" alt="Samosa" class="w-24 h-24 object-cover rounded-xl mx-auto mb-2"/>
+                    <h4 class="text-white text-xs font-bold">Dilli 6 Samosa</h4>
+                    <p class="text-haldi-400 text-xs font-black">₹140 (2 pcs)</p>
+                </div>
+                <div class="bg-black/80 backdrop-blur-md p-4 rounded-2xl border border-haldi-500/30 text-center shadow-xl">
+                    <img src="https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=300&auto=format&fit=crop&q=80" alt="Kulhad Chai" class="w-24 h-24 object-cover rounded-xl mx-auto mb-2"/>
+                    <h4 class="text-white text-xs font-bold">Cutting Masala Chai</h4>
+                    <p class="text-haldi-400 text-xs font-black">₹90 (Kulhad)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trending Top 5 Indian Blockbusters (Ranking Layout) -->
+<section id="trending" class="max-w-7xl mx-auto px-4 md:px-10 py-12 border-t border-white/5">
+    <div class="flex items-center gap-3 mb-8">
+        <span class="material-symbols-outlined text-vermilion-500 text-3xl">local_fire_department</span>
+        <div>
+            <h2 class="font-rozha text-2xl md:text-3xl text-white">Top 5 Trending in India This Week</h2>
+            <p class="text-gray-400 text-xs">Highest box office collections and fan ratings across the nation.</p>
+        </div>
+    </div>
+
+    <div id="trendingList" class="space-y-4">
+        <!-- Populated dynamically -->
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-[#080607] py-12 border-t border-white/10 px-4 md:px-10">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-gray-500">
+        <div class="flex items-center gap-2">
+            <span class="font-rozha text-lg gold-gradient-text">DesiCine Bharat</span>
+            <span>• Built with DRF & Scikit-Learn Engine</span>
+        </div>
+        <div class="flex items-center gap-6">
+            <a href="/api/movies/" class="hover:text-haldi-400">DRF Movie API</a>
+            <a href="/api/movies/by_genre/" class="hover:text-haldi-400">Genre API</a>
+            <a href="/api/theaters/" class="hover:text-haldi-400">Theaters API</a>
+            <a href="/api/snacks/" class="hover:text-haldi-400">Snacks API</a>
+            <a href="{% url 'dashboard' %}" class="hover:text-haldi-400">Box Office Admin</a>
+        </div>
+        <p>© 2026 DesiCine Bharat. All rights reserved. 🇮🇳</p>
+    </div>
+</footer>
+
+<script>
+let currentLanguage = 'All';
+let currentGenre = 'All';
+let genreClassificationData = {};
+
+// Helper to strictly deduplicate movie arrays by unique movie ID
+function deduplicateMovies(list) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    const unique = [];
+    for (const m of list) {
+        if (m && m.id && !seen.has(m.id)) {
+            seen.add(m.id);
+            unique.push(m);
+        }
+    }
+    return unique;
+}
+
+// 1. Fetch Genre Classification Data & Render Genre Tabs
+async function loadGenreClassification() {
+    try {
+        const res = await fetch('/api/movies/by_genre/');
+        genreClassificationData = await res.json();
+        
+        const genreKeys = Object.keys(genreClassificationData);
+        if (genreKeys.length === 0) return;
+
+        const container = document.getElementById('genreTabsContainer');
+        container.innerHTML = genreKeys.map((gKey, idx) => {
+            const g = genreClassificationData[gKey];
+            const isActive = idx === 0;
+            return `
+                <button onclick="selectGenreTab('${gKey}', this)" class="genre-tab-btn ${isActive ? 'active' : ''} px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap bg-desi-surface border border-white/10 text-gray-300 hover:border-vermilion-500 transition flex items-center gap-1.5">
+                    <span>${g.icon}</span>
+                    <span>${gKey}</span>
+                    <span class="bg-black/60 px-1.5 py-0.5 rounded-full text-[10px] text-haldi-400 font-bold ml-1">${g.count}</span>
+                </button>
+            `;
+        }).join('');
+
+        if (genreKeys.length > 0) {
+            renderGenreMovies(genreKeys[0]);
+        }
+    } catch (e) {
+        console.error("Error loading genre classification:", e);
+    }
+}
+
+function selectGenreTab(genreKey, btn) {
+    document.querySelectorAll('.genre-tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderGenreMovies(genreKey);
+}
+
+function renderGenreMovies(genreKey) {
+    const data = genreClassificationData[genreKey];
+    if (!data) return;
+
+    document.getElementById('activeGenreTitle').innerText = `${data.icon} ${genreKey}`;
+    document.getElementById('activeGenreDesc').innerText = data.description;
+
+    const grid = document.getElementById('genreMoviesGrid');
+    const movies = deduplicateMovies(data.movies);
+
+    if (!movies || movies.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">No movies found in this genre.</div>';
+        return;
+    }
+
+    grid.innerHTML = movies.map(m => `
+        <div class="group illustrated-glass-card rounded-2xl overflow-hidden hover:border-vermilion-500/80 transition-all duration-300 flex flex-col shadow-xl">
+            <div class="relative aspect-[2/3] overflow-hidden">
+                <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
+                <div class="absolute top-2.5 right-2.5 bg-black/80 px-2 py-0.5 rounded-full text-xs font-black text-haldi-400 border border-haldi-500/40">
+                    ★ ${m.rating}
+                </div>
+                <div class="absolute bottom-2.5 left-2.5 bg-vermilion-600/90 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                    ${m.language} • ${m.certification}
+                </div>
+            </div>
+            <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+                <div>
+                    <h4 class="text-sm font-bold text-white group-hover:text-haldi-400 truncate">${m.title}</h4>
+                    <p class="text-[11px] text-terracotta-400 line-clamp-1">${m.genre}</p>
+                    <p class="text-[10px] text-gray-400 line-clamp-2 mt-1">${m.tagline || m.description}</p>
+                </div>
+                <a href="/movie/${m.id}/" class="w-full art-vermilion-btn text-white text-center py-2 rounded-lg text-xs font-bold transition block mt-2">
+                    Book Tickets
+                </a>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 2. Main Filtered Catalog
+async function fetchMovies() {
+    let url = '/api/movies/?';
+    if (currentLanguage !== 'All') url += `language=${encodeURIComponent(currentLanguage)}&`;
+    if (currentGenre !== 'All') url += `genre=${encodeURIComponent(currentGenre)}&`;
+
+    const searchVal = document.getElementById('searchInput').value.trim();
+    if (searchVal) url += `search=${encodeURIComponent(searchVal)}&`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const rawMovies = data.results || data;
+        const movies = deduplicateMovies(rawMovies);
+        renderMovies(movies);
+    } catch (e) {
+        console.error("Error fetching movies from DRF:", e);
+    }
+}
+
+function renderMovies(movies) {
+    const grid = document.getElementById('moviesGrid');
+    if (!movies || movies.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">No movies found matching your filters.</div>';
+        return;
+    }
+
+    grid.innerHTML = movies.map(m => `
+        <div class="group illustrated-glass-card rounded-2xl overflow-hidden hover:border-haldi-500/60 transition-all duration-300 flex flex-col shadow-xl">
+            <div class="relative aspect-[2/3] overflow-hidden">
+                <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                <div class="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-black text-haldi-400 flex items-center gap-1 border border-haldi-500/40">
+                    <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                    ${m.rating}
+                </div>
+                <div class="absolute bottom-3 left-3 bg-vermilion-600/95 text-white text-[10px] font-black px-2 py-0.5 rounded tracking-wider uppercase">
+                    ${m.language} • ${m.certification}
+                </div>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                <div>
+                    <h3 class="text-base font-bold text-white group-hover:text-haldi-400 transition truncate">${m.title}</h3>
+                    <p class="text-xs text-gray-400 truncate">${m.genre}</p>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                    <span class="text-xs font-semibold text-gray-300">₹240 Onwards</span>
+                    <a href="/movie/${m.id}/" class="art-vermilion-btn text-white text-xs font-bold px-4 py-2 rounded-lg transition">
+                        BOOK
+                    </a>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// 3. Thematic Recommendation Matcher
+async function fetchTopicRecommendations(topic, btn) {
+    if (btn) {
+        document.querySelectorAll('.topic-pill').forEach(p => {
+            p.className = 'topic-pill bg-desi-surface hover:border-haldi-400 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-white/10';
+        });
+        btn.className = 'topic-pill active bg-desi-surface border border-haldi-500 text-black px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap';
+    }
+
+    const topicTitles = {
+        'Education': '🎓 Education & Student Struggle',
+        'UPSC': '🏛️ UPSC, IAS/IPS & Civil Services',
+        'Crime': '🕶️ Crime & Underworld Mafia',
+        'Patriotism': '🇮🇳 Patriotism & Armed Forces',
+        'Horror': '👻 Horror Comedy Masala',
+        'Sports': '🏏 Sports & Inspiring Biopics',
+        'Mythology': '🕉️ Mythology & Epics',
+        'Romance': '❤️ Romance & Classics'
+    };
+
+    document.getElementById('activeTopicTitle').innerText = topicTitles[topic] || topic;
+
+    try {
+        const response = await fetch(`/api/movies/recommend_by_topic/?topic=${encodeURIComponent(topic)}`);
+        const data = await response.json();
+        const rawRecs = data.recommendations || [];
+        const recs = deduplicateMovies(rawRecs);
+        const grid = document.getElementById('topicRecommendationsGrid');
+
+        if (!recs || recs.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center py-6 text-gray-400">No matching movies found for this topic.</div>';
+            return;
+        }
+
+        grid.innerHTML = recs.map(m => `
+            <div class="group illustrated-glass-card rounded-2xl overflow-hidden hover:border-haldi-500/80 transition-all duration-300 flex flex-col shadow-xl">
+                <div class="relative aspect-[2/3] overflow-hidden">
+                    <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
+                    <div class="absolute top-2.5 right-2.5 bg-black/80 px-2 py-0.5 rounded-full text-xs font-black text-haldi-400 border border-haldi-500/40">
+                        ★ ${m.rating}
+                    </div>
+                    <div class="absolute top-2.5 left-2.5 bg-haldi-500 text-black text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                        AI MATCH
+                    </div>
+                </div>
+                <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                        <h4 class="text-sm font-bold text-white group-hover:text-haldi-400 truncate">${m.title}</h4>
+                        <p class="text-[11px] text-terracotta-400 line-clamp-1">${m.genre}</p>
+                        <p class="text-[10px] text-gray-400 line-clamp-2 mt-1">${m.tagline || m.description}</p>
+                    </div>
+                    <a href="/movie/${m.id}/" class="w-full art-vermilion-btn text-white text-center py-2 rounded-lg text-xs font-bold transition block mt-2">
+                        View Showtimes
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error fetching topic recommendations:", e);
+    }
+}
+
+// 4. Trending Hits
+async function fetchTrending() {
+    try {
+        const response = await fetch('/api/movies/trending_bollywood/');
+        const rawMovies = await response.json();
+        const movies = deduplicateMovies(rawMovies);
+        const list = document.getElementById('trendingList');
+
+        if (!movies || movies.length === 0) return;
+
+        list.innerHTML = movies.slice(0, 5).map((m, idx) => `
+            <div class="flex items-center gap-6 illustrated-glass-card p-4 md:p-6 rounded-2xl hover:border-vermilion-500/50 transition">
+                <div class="ranking-number shrink-0 font-black">${idx + 1}</div>
+                <img src="${m.poster}" alt="${m.title}" class="w-20 md:w-28 aspect-[2/3] object-cover rounded-xl shrink-0 shadow-xl"/>
+                <div class="flex-1 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-haldi-500/20 text-haldi-400 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">Box Office Smash</span>
+                        <span class="text-xs text-gray-400">${m.language} • ${m.certification}</span>
+                    </div>
+                    <h3 class="text-xl md:text-2xl font-black text-white font-rozha">${m.title}</h3>
+                    <p class="text-xs md:text-sm text-gray-400 line-clamp-2">${m.tagline || m.genre}</p>
+                </div>
+                <div class="hidden md:flex flex-col items-end gap-3 shrink-0">
+                    <div class="flex items-center gap-1 text-haldi-400 font-bold text-sm">
+                        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                        ${m.rating} / 10
+                    </div>
+                    <a href="/movie/${m.id}/" class="art-vermilion-btn text-white text-xs font-black px-6 py-2.5 rounded-lg transition">
+                        GET TICKETS
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error fetching trending movies:", e);
+    }
+}
+
+function filterGenre(genre, btn) {
+    currentGenre = genre;
+    document.querySelectorAll('.genre-btn').forEach(b => {
+        b.className = 'genre-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-vermilion-500 hover:text-white text-xs font-semibold uppercase transition';
+    });
+    btn.className = 'genre-btn px-3.5 py-1 rounded-full border border-vermilion-500 bg-vermilion-500 text-white text-xs font-bold uppercase transition';
+    fetchMovies();
+}
+
+function filterLanguage(lang, btn) {
+    currentLanguage = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => {
+        b.className = 'lang-btn px-3.5 py-1 rounded-full border border-white/10 text-gray-300 hover:border-haldi-500 hover:text-white text-xs font-semibold uppercase transition';
+    });
+    btn.className = 'lang-btn px-3.5 py-1 rounded-full border border-haldi-500 bg-haldi-500 text-black text-xs font-bold uppercase transition';
+    fetchMovies();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadGenreClassification();
+    fetchMovies();
+    fetchTopicRecommendations('Education');
+    fetchTrending();
+});
+</script>
+
+</body>
+</html>

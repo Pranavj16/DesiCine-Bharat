@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>My Account & Bookings | DesiCine</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              gold: { 400: "#FBBF24", 500: "#F59E0B", 600: "#D97706" },
+              crimson: { 500: "#E11D48", 600: "#BE123C", 700: "#9F1239" },
+              desi: { dark: "#0B090A", card: "#16161A", surface: "#212126" }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #0B090A; color: #F3F4F6; font-family: 'Inter', sans-serif; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<header class="bg-[#0B090A]/95 border-b border-white/10 py-4 px-6 fixed top-0 w-full z-40">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+        <a href="{% url 'home' %}" class="flex items-center gap-2">
+            <span class="text-xl font-black font-cinzel gold-gradient-text">DESICINE</span>
+            <span class="bg-gold-500 text-black text-[9px] font-black px-1.5 py-0.5 rounded uppercase">MEMBER</span>
+        </a>
+        <div class="flex items-center gap-4 text-xs">
+            <a href="{% url 'home' %}" class="text-gray-400 hover:text-white font-semibold">Home</a>
+            <a href="{% url 'logout' %}" class="text-crimson-500 font-bold">Sign Out</a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 pt-28 pb-20 space-y-8">
+    <!-- User Profile Header -->
+    <div class="bg-desi-card p-6 md:p-8 rounded-3xl border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-gold-600 to-crimson-600 flex items-center justify-center text-2xl font-black text-white shadow-xl">
+                {{ user.username|first|upper }}
+            </div>
+            <div>
+                <h1 class="text-2xl font-black font-montserrat text-white">{{ user.username }}</h1>
+                <p class="text-xs text-gray-400">{{ user.email|default:"Registered DesiCine VIP Member" }}</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="bg-gold-500/20 text-gold-400 text-[10px] font-bold px-2 py-0.5 rounded">👑 Bollywood CinePass Club</span>
+                    <span class="text-[10px] text-gray-500">Member since {{ user.date_joined|date:"M Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4">
+            <div class="bg-desi-surface px-5 py-3 rounded-2xl border border-white/5 text-center">
+                <p class="text-[10px] text-gray-400 uppercase font-bold">Total Bookings</p>
+                <p class="text-xl font-black text-gold-400">{{ bookings.count }}</p>
+            </div>
+            <div class="bg-desi-surface px-5 py-3 rounded-2xl border border-white/5 text-center">
+                <p class="text-[10px] text-gray-400 uppercase font-bold">Member Level</p>
+                <p class="text-xl font-black text-crimson-500">Platinum</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings List -->
+    <div class="space-y-4">
+        <h2 class="text-xl font-black font-montserrat text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-gold-400">confirmation_number</span>
+            My Bollywood Tickets & CinePasses
+        </h2>
+
+        <div class="space-y-4">
+            {% for b in bookings %}
+                <div class="bg-desi-card p-6 rounded-2xl border border-white/5 hover:border-gold-500/30 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="flex gap-4 items-center">
+                        <img src="{{ b.showtime.movie.poster }}" alt="{{ b.showtime.movie.title }}" class="w-16 aspect-[2/3] object-cover rounded-xl border border-white/10 shrink-0"/>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-gold-500/20 text-gold-400 text-[10px] font-black px-1.5 py-0.5 rounded">{{ b.booking_id }}</span>
+                                <span class="text-xs text-gray-400 font-semibold">{{ b.showtime.movie.language }} • {{ b.showtime.format }}</span>
+                            </div>
+                            <h3 class="text-lg font-black text-white leading-tight">{{ b.showtime.movie.title }}</h3>
+                            <p class="text-xs text-gray-300">{{ b.showtime.screen.theater.name }}, {{ b.showtime.screen.theater.city }}</p>
+                            <p class="text-xs text-gold-400 font-bold">{{ b.showtime.show_date }} at {{ b.showtime.show_time|time:"h:i A" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:items-end gap-2 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-white/5">
+                        <div class="flex items-center gap-1">
+                            {% for bs in b.booked_seats.all %}
+                                <span class="bg-desi-surface text-gold-400 border border-gold-500/30 text-xs font-black px-2 py-0.5 rounded">
+                                    {{ bs.seat.row_label }}{{ bs.seat.seat_number }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                        <p class="text-sm font-black text-white">Paid: <span class="text-gold-400">₹{{ b.total_amount }}</span></p>
+                        <a href="{% url 'payment_success' %}?booking_id={{ b.booking_id }}" class="bg-crimson-600 hover:bg-crimson-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition text-center">
+                            View Digital CinePass
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="bg-desi-card p-12 rounded-2xl text-center space-y-3 border border-white/5">
+                    <span class="material-symbols-outlined text-4xl text-gray-600">movie</span>
+                    <h3 class="text-base font-bold text-white">No Bollywood Bookings Yet</h3>
+                    <p class="text-xs text-gray-400">Browse current blockbusters like Jawan, Stree 2, and RRR!</p>
+                    <a href="{% url 'home' %}" class="inline-block bg-gold-500 hover:bg-gold-600 text-black text-xs font-bold px-6 py-2.5 rounded-xl transition">
+                        Explore Movies Now
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

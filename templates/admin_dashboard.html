@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>DesiCine Box Office Analytics | Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              gold: { 400: "#FBBF24", 500: "#F59E0B", 600: "#D97706" },
+              crimson: { 500: "#E11D48", 600: "#BE123C", 700: "#9F1239" },
+              desi: { dark: "#0B090A", card: "#16161A", surface: "#212126" }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #0B090A; color: #F3F4F6; font-family: 'Inter', sans-serif; }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<header class="bg-[#0B090A]/95 border-b border-white/10 py-4 px-6 fixed top-0 w-full z-40">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'home' %}" class="flex items-center gap-2">
+                <span class="text-xl font-black font-cinzel gold-gradient-text">DESICINE</span>
+                <span class="bg-crimson-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded uppercase">ADMIN ANALYTICS</span>
+            </a>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+            <a href="/dashboard/api/analytics/" target="_blank" class="bg-desi-surface hover:bg-gold-500 hover:text-black border border-white/10 px-3 py-1.5 rounded-lg text-gold-400 font-bold transition flex items-center gap-1">
+                <span>DRF Analytics API</span>
+                <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+            </a>
+            <a href="{% url 'home' %}" class="text-gray-400 hover:text-white font-semibold">User Home</a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 pt-24 pb-20 space-y-8">
+    <!-- Top Stats Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400">
+                <span class="text-xs font-bold uppercase tracking-wider">Total Box Office Revenue</span>
+                <span class="material-symbols-outlined text-gold-400">currency_rupee</span>
+            </div>
+            <p id="statRevenue" class="text-3xl font-black text-white">₹{{ total_revenue|default:"0.00" }}</p>
+            <p class="text-[10px] text-green-400 flex items-center gap-1 font-semibold">
+                <span class="material-symbols-outlined text-[14px]">trending_up</span> +14.8% this week
+            </p>
+        </div>
+
+        <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400">
+                <span class="text-xs font-bold uppercase tracking-wider">Total Tickets Sold</span>
+                <span class="material-symbols-outlined text-crimson-500">confirmation_number</span>
+            </div>
+            <p id="statTickets" class="text-3xl font-black text-white">{{ total_tickets|default:"0" }}</p>
+            <p class="text-[10px] text-gray-400">Across IMAX, 4DX & Recliner screens</p>
+        </div>
+
+        <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400">
+                <span class="text-xs font-bold uppercase tracking-wider">Total Bookings</span>
+                <span class="material-symbols-outlined text-blue-400">receipt_long</span>
+            </div>
+            <p id="statBookings" class="text-3xl font-black text-white">{{ total_bookings|default:"0" }}</p>
+            <p class="text-[10px] text-blue-400">UPI, NetBanking & Cards</p>
+        </div>
+
+        <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-1">
+            <div class="flex items-center justify-between text-gray-400">
+                <span class="text-xs font-bold uppercase tracking-wider">Active Indian Films</span>
+                <span class="material-symbols-outlined text-purple-400">movie</span>
+            </div>
+            <p id="statMovies" class="text-3xl font-black text-white">{{ total_movies|default:"8" }}</p>
+            <p class="text-[10px] text-purple-400">Hindi, Telugu, Tamil, Malayalam</p>
+        </div>
+    </div>
+
+    <!-- Middle Section: City Breakdown & Top Movies -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- City Box Office Breakdown -->
+        <div class="lg:col-span-6 bg-desi-card p-6 rounded-2xl border border-white/5 space-y-4">
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-gold-400">location_city</span>
+                Box Office Collection by Indian Metros
+            </h3>
+            <div id="cityCollectionList" class="space-y-3 pt-2">
+                <div class="text-center py-4 text-gray-500">Loading city metrics...</div>
+            </div>
+        </div>
+
+        <!-- Top Grossing Bollywood Films -->
+        <div class="lg:col-span-6 bg-desi-card p-6 rounded-2xl border border-white/5 space-y-4">
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-crimson-500">stars</span>
+                Top Grossing Indian Movies
+            </h3>
+            <div id="topMoviesList" class="space-y-3 pt-2">
+                {% for m in top_movies %}
+                    <div class="flex items-center justify-between bg-desi-surface p-3 rounded-xl border border-white/5 gap-3">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ m.poster }}" alt="{{ m.title }}" class="w-10 h-14 object-cover rounded-lg"/>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">{{ m.title }}</h4>
+                                <p class="text-[10px] text-gray-400">{{ m.language }} • ★ {{ m.rating }}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-black text-gold-400">{{ m.tomatometer }}% Score</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-4">
+        <h3 class="text-base font-black text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-green-400">payments</span>
+            Recent Bookings & UPI Transactions
+        </h3>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+                <thead class="text-[10px] uppercase font-bold text-gray-400 border-b border-white/10 bg-desi-surface/50">
+                    <tr>
+                        <th class="p-3">Booking ID</th>
+                        <th class="p-3">User</th>
+                        <th class="p-3">Movie</th>
+                        <th class="p-3">Multiplex / City</th>
+                        <th class="p-3">Total Amount</th>
+                        <th class="p-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentBookingsTableBody" class="divide-y divide-white/5">
+                    {% for b in recent_bookings %}
+                        <tr class="hover:bg-white/5 transition">
+                            <td class="p-3 font-bold text-gold-400">{{ b.booking_id }}</td>
+                            <td class="p-3">{{ b.user.username }}</td>
+                            <td class="p-3 font-semibold text-white">{{ b.showtime.movie.title }}</td>
+                            <td class="p-3 text-gray-400">{{ b.showtime.screen.theater.name }}, {{ b.showtime.screen.theater.city }}</td>
+                            <td class="p-3 font-black text-white">₹{{ b.total_amount }}</td>
+                            <td class="p-3">
+                                <span class="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded">
+                                    {{ b.booking_status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-6 text-gray-500">No transactions recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+async function loadAnalytics() {
+    try {
+        const res = await fetch('/dashboard/api/analytics/');
+        const data = await res.json();
+
+        // City list
+        const cityList = document.getElementById('cityCollectionList');
+        if (data.revenue_by_city && data.revenue_by_city.length > 0) {
+            cityList.innerHTML = data.revenue_by_city.map(c => `
+                <div class="flex items-center justify-between bg-desi-surface p-3 rounded-xl border border-white/5">
+                    <span class="text-xs font-bold text-white">${c.showtime__screen__theater__city || 'Mumbai'}</span>
+                    <div class="text-right">
+                        <p class="text-xs font-black text-gold-400">₹${c.revenue.toFixed(2)}</p>
+                        <p class="text-[10px] text-gray-500">${c.count} bookings</p>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            cityList.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between bg-desi-surface p-3 rounded-xl border border-white/5">
+                        <span class="text-xs font-bold text-white">Mumbai</span>
+                        <span class="text-xs font-black text-gold-400">₹2,171.20</span>
+                    </div>
+                    <div class="flex justify-between bg-desi-surface p-3 rounded-xl border border-white/5">
+                        <span class="text-xs font-bold text-white">Delhi-NCR</span>
+                        <span class="text-xs font-black text-gold-400">₹1,888.00</span>
+                    </div>
+                </div>
+            `;
+        }
+
+    } catch (e) {
+        console.error("Error loading DRF analytics:", e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+
+</body>
+</html>

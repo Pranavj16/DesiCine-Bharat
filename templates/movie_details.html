@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{{ movie.title|default:"Movie Details" }} | DesiCine Bharat</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,700&family=Rozha+One&family=Cinzel:wght@700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              vermilion: { 400: "#F87171", 500: "#E5383B", 600: "#BA181B", 700: "#660708" },
+              terracotta: { 400: "#F4A261", 500: "#E07A5F", 600: "#C85A32" },
+              haldi: { 400: "#FDE047", 500: "#F59E0B", 600: "#D97706" },
+              desi: { dark: "#0C0A0A", card: "#171415", surface: "#241F21" }
+            },
+            fontFamily: {
+              rozha: ["Rozha One", "serif"],
+              montserrat: ["Montserrat", "sans-serif"],
+              playfair: ["Playfair Display", "serif"],
+              cinzel: ["Cinzel", "serif"],
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body { background-color: #0C0A0A; color: #F3EFEF; font-family: 'Montserrat', sans-serif; }
+        .art-vermilion-btn {
+            background: linear-gradient(135deg, #E5383B 0%, #BA181B 100%);
+            box-shadow: 0 4px 20px rgba(229, 56, 59, 0.45);
+        }
+        .art-vermilion-btn:hover {
+            box-shadow: 0 6px 28px rgba(245, 158, 11, 0.7);
+            transform: translateY(-2px);
+        }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFF1A8 0%, #F59E0B 50%, #E07A5F 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .backdrop-overlay {
+            background: linear-gradient(180deg, rgba(12, 10, 10, 0.35) 0%, rgba(12, 10, 10, 0.85) 75%, #0C0A0A 100%);
+        }
+        .illustrated-glass-card {
+            background: rgba(23, 20, 21, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+        @keyframes reelSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .reel-spinning { animation: reelSpin 2s linear infinite; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="fixed top-0 w-full z-50 bg-[#0C0A0A]/90 backdrop-blur-xl border-b border-vermilion-500/20">
+    <nav class="flex justify-between items-center h-20 px-4 md:px-12 max-w-7xl mx-auto">
+        <a class="flex items-center gap-2" href="{% url 'home' %}">
+            <span class="font-rozha text-2xl md:text-3xl gold-gradient-text">DESICINE</span>
+            <span class="bg-vermilion-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase">BHARAT</span>
+        </a>
+        <div class="flex items-center gap-4 text-xs">
+            <a href="{% url 'home' %}" class="text-gray-300 hover:text-haldi-400 font-bold transition flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span> All Movies
+            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'user_account' %}" class="text-haldi-400 font-bold bg-desi-surface px-3 py-1.5 rounded-full border border-white/10">{{ user.username }}</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="art-vermilion-btn px-4 py-2 rounded-xl font-bold text-white">Sign In</a>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+<!-- Movie Backdrop & Hero Header -->
+<section class="relative pt-20 min-h-[68vh] flex items-end">
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <img class="w-full h-full object-cover brightness-50 scale-105" src="{{ movie.backdrop|default:'https://image.tmdb.org/t/p/w1280/fVV0A67kDjTTQ4CvUn8LoletRmI.jpg' }}" alt="{{ movie.title }} Backdrop"/>
+        <div class="backdrop-overlay absolute inset-0"></div>
+    </div>
+
+    <div class="relative z-10 max-w-7xl mx-auto px-4 md:px-12 py-10 w-full">
+        <div class="flex flex-col md:flex-row gap-8 items-start">
+            <!-- Authentic Poster -->
+            <div class="w-48 md:w-64 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-haldi-500/50 shrink-0">
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="w-full h-full object-cover"/>
+            </div>
+
+            <!-- Movie Info -->
+            <div class="space-y-4 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="bg-haldi-500/20 text-haldi-400 border border-haldi-500/40 px-3 py-0.5 rounded-full text-xs font-bold uppercase">
+                        {{ movie.language }} • {{ movie.certification }}
+                    </span>
+                    <span class="bg-vermilion-600/30 text-vermilion-400 border border-vermilion-500/40 px-3 py-0.5 rounded-full text-xs font-bold">
+                        {{ movie.duration }} Mins
+                    </span>
+                    <span class="text-xs text-gray-300 font-medium">{{ movie.genre }}</span>
+                </div>
+
+                <h1 class="text-3xl md:text-5xl font-black font-rozha tracking-wide text-white uppercase leading-tight">
+                    {{ movie.title }}
+                </h1>
+
+                {% if movie.tagline %}
+                    <p class="text-haldi-400 font-semibold italic text-sm md:text-base">"{{ movie.tagline }}"</p>
+                {% endif %}
+
+                <p class="text-gray-300 text-sm md:text-base max-w-3xl leading-relaxed font-normal">
+                    {{ movie.description }}
+                </p>
+
+                <!-- Cast & Crew -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2 text-xs">
+                    <div class="bg-desi-surface/80 p-3 rounded-xl border border-white/5">
+                        <p class="text-terracotta-400 font-medium">Starring</p>
+                        <p class="text-white font-bold text-sm mt-0.5">{{ movie.cast }}</p>
+                    </div>
+                    <div class="bg-desi-surface/80 p-3 rounded-xl border border-white/5">
+                        <p class="text-terracotta-400 font-medium">Director</p>
+                        <p class="text-white font-bold text-sm mt-0.5">{{ movie.director }}</p>
+                    </div>
+                    <div class="bg-desi-surface/80 p-3 rounded-xl border border-white/5">
+                        <p class="text-terracotta-400 font-medium">Music & BGM</p>
+                        <p class="text-white font-bold text-sm mt-0.5">{{ movie.music_director|default:"Bollywood Masters" }}</p>
+                    </div>
+                </div>
+
+                <!-- Rating -->
+                <div class="flex items-center gap-6 pt-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-3xl font-black text-haldi-400">★ {{ movie.rating }}</span>
+                        <span class="text-xs text-gray-400">/ 10<br/>Audience Rating</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-3xl font-black text-vermilion-500">{{ movie.tomatometer }}%</span>
+                        <span class="text-xs text-gray-400">Tomatometer<br/>Critical Score</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Showtimes & Multiplex Theaters Section -->
+<section id="showtimes-section" class="py-12 bg-desi-dark border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl md:text-3xl font-black font-rozha text-white">Select Indian Multiplex & Showtime</h2>
+                <p class="text-gray-400 text-xs mt-1">Book your screen: IMAX with Laser, Dolby Atmos 4K, or INSIGNIA Recliners.</p>
+            </div>
+
+            <!-- City Filter for Theaters -->
+            <div class="flex items-center gap-2 bg-desi-surface px-4 py-2 rounded-xl border border-vermilion-500/30">
+                <span class="material-symbols-outlined text-haldi-400 text-sm">location_on</span>
+                <span class="text-xs font-bold text-terracotta-400 uppercase">City:</span>
+                <select id="theaterCityFilter" class="bg-transparent border-none text-xs font-bold text-white focus:ring-0 cursor-pointer" onchange="fetchShowtimes()">
+                    <option value="Mumbai" class="bg-desi-dark">Mumbai</option>
+                    <option value="Delhi-NCR" class="bg-desi-dark">Delhi-NCR</option>
+                    <option value="Bengaluru" class="bg-desi-dark">Bengaluru</option>
+                    <option value="Hyderabad" class="bg-desi-dark">Hyderabad</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="showtimesContainer" class="space-y-6">
+            <div class="text-center py-8 text-gray-500">Loading multiplex showtimes...</div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Recommendation Engine: Similar Movies -->
+<section class="py-14 bg-[#100D0E] border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <span class="text-haldi-400 text-xs font-bold uppercase tracking-widest flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">smart_toy</span>
+                    AI CONTENT-BASED RECOMMENDATION
+                </span>
+                <h2 class="text-2xl font-black font-rozha text-white mt-1">
+                    If You Loved "{{ movie.title }}", You Must Watch These:
+                </h2>
+                <p class="text-gray-400 text-xs mt-0.5">Matched using TF-IDF genre, star cast, and thematic similarity scores.</p>
+            </div>
+        </div>
+
+        <div id="similarMoviesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+            <div class="col-span-full text-center py-6 text-gray-500">Loading similar Bollywood movies...</div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews & Ratings Section -->
+<section class="py-12 bg-desi-dark border-t border-white/5">
+    <div class="max-w-7xl mx-auto px-4 md:px-12">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-black font-rozha text-white">Audience Reviews & Desi Fan Reactions</h2>
+            {% if user.is_authenticated %}
+                <button onclick="toggleReviewModal()" class="bg-haldi-500 hover:bg-haldi-600 text-black px-5 py-2.5 rounded-xl text-xs font-bold transition shadow">
+                    + Write a Review
+                </button>
+            {% endif %}
+        </div>
+
+        <div id="reviewsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Populated from DRF API -->
+        </div>
+    </div>
+</section>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-desi-card border border-vermilion-500/30 p-6 rounded-2xl max-w-md w-full space-y-4">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-black text-white font-rozha">Rate "{{ movie.title }}"</h3>
+            <button onclick="toggleReviewModal()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-400 block mb-1">Rating (1 to 5 Stars)</label>
+            <select id="reviewRating" class="w-full bg-desi-surface border border-white/10 rounded-lg text-sm text-white p-2.5">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5) - Blockbuster!</option>
+                <option value="4">⭐⭐⭐⭐ (4/5) - Great Masala!</option>
+                <option value="3">⭐⭐⭐ (3/5) - One-time Watch</option>
+                <option value="2">⭐⭐ (2/5) - Average</option>
+                <option value="1">⭐ (1/5) - Disappointing</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-xs font-bold text-gray-400 block mb-1">Your Review</label>
+            <textarea id="reviewComment" rows="3" class="w-full bg-desi-surface border border-white/10 rounded-lg text-sm text-white p-2.5" placeholder="Share your experience (acting, BGM, dialogs)..."></textarea>
+        </div>
+        <button onclick="submitReview({{ movie.id }})" class="w-full art-vermilion-btn text-white py-3 rounded-xl font-bold text-sm">
+            Submit Review
+        </button>
+    </div>
+</div>
+
+<script>
+const movieId = {{ movie.id|default:"1" }};
+
+async function fetchShowtimes() {
+    const city = document.getElementById('theaterCityFilter').value;
+    try {
+        const res = await fetch(`/api/showtimes/?movie=${movieId}&city=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        const showtimes = data.results || data;
+
+        const container = document.getElementById('showtimesContainer');
+        if (!showtimes || showtimes.length === 0) {
+            container.innerHTML = `<div class="bg-desi-surface p-8 rounded-2xl text-center text-gray-400">No scheduled showtimes currently found in ${city}. Please check another city or date.</div>`;
+            return;
+        }
+
+        const theaterGroups = {};
+        showtimes.forEach(st => {
+            if (!theaterGroups[st.theater_name]) {
+                theaterGroups[st.theater_name] = {
+                    theaterName: st.theater_name,
+                    city: st.theater_city,
+                    shows: []
+                };
+            }
+            theaterGroups[st.theater_name].shows.push(st);
+        });
+
+        container.innerHTML = Object.values(theaterGroups).map(grp => `
+            <div class="bg-desi-card p-6 rounded-2xl border border-white/5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-3 gap-2">
+                    <div>
+                        <h3 class="text-lg font-black text-white flex items-center gap-2 font-rozha">
+                            <span class="material-symbols-outlined text-haldi-400 text-[20px]">theaters</span>
+                            ${grp.theaterName}
+                        </h3>
+                        <p class="text-xs text-gray-400">${grp.city} • Dolby Atmos 7.1 • In-Seat Desi Dining</p>
+                    </div>
+                    <span class="text-xs bg-haldi-500/10 text-haldi-400 border border-haldi-500/20 px-3 py-1 rounded-full font-bold self-start">
+                        ₹240 Silver | ₹390 Gold | ₹690 Recliner
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap gap-3 pt-2">
+                    ${grp.shows.map(s => `
+                        <a href="/seat-selection/${s.id}/" class="group bg-desi-surface hover:bg-haldi-500 hover:text-black border border-white/10 hover:border-haldi-500 px-4 py-2.5 rounded-xl transition flex flex-col items-center">
+                            <span class="text-sm font-extrabold text-white group-hover:text-black">${s.show_time.slice(0, 5)}</span>
+                            <span class="text-[10px] text-gray-400 group-hover:text-black font-semibold">${s.format}</span>
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+
+    } catch (e) {
+        console.error("Error fetching showtimes:", e);
+    }
+}
+
+async function fetchRecommendations() {
+    try {
+        const res = await fetch(`/api/movies/${movieId}/recommendations/`);
+        const data = await res.json();
+        const recs = data.recommendations || [];
+        const grid = document.getElementById('similarMoviesGrid');
+
+        if (!recs || recs.length === 0) {
+            grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-4">No content recommendations available.</div>';
+            return;
+        }
+
+        grid.innerHTML = recs.map(m => `
+            <div class="illustrated-glass-card rounded-2xl overflow-hidden hover:border-haldi-500/50 transition flex flex-col shadow-xl">
+                <div class="aspect-[2/3] overflow-hidden relative">
+                    <img src="${m.poster}" alt="${m.title}" class="w-full h-full object-cover"/>
+                    <div class="absolute top-2 right-2 bg-black/80 px-2 py-0.5 rounded text-[10px] font-black text-haldi-400">
+                        ★ ${m.rating}
+                    </div>
+                </div>
+                <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                        <h4 class="text-sm font-bold text-white truncate font-rozha">${m.title}</h4>
+                        <p class="text-[10px] text-gray-400">${m.language} • ${m.genre.split(',')[0]}</p>
+                    </div>
+                    <a href="/movie/${m.id}/" class="w-full art-vermilion-btn text-white text-center py-1.5 rounded-lg text-xs font-bold transition">
+                        View Showtimes
+                    </a>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error("Error loading recommendations:", e);
+    }
+}
+
+async function fetchMovieDetails() {
+    try {
+        const res = await fetch(`/api/movies/${movieId}/`);
+        const movie = await res.json();
+        const reviewsList = document.getElementById('reviewsList');
+
+        if (movie.reviews && movie.reviews.length > 0) {
+            reviewsList.innerHTML = movie.reviews.map(r => `
+                <div class="bg-desi-card p-4 rounded-xl border border-white/5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-white flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px] text-haldi-400">account_circle</span>
+                            ${r.username}
+                        </span>
+                        <span class="text-xs text-haldi-400 font-bold">${'⭐'.repeat(r.rating)}</span>
+                    </div>
+                    <p class="text-xs text-gray-300 leading-relaxed">${r.comment}</p>
+                </div>
+            `).join('');
+        } else {
+            reviewsList.innerHTML = '<div class="col-span-full text-center py-4 text-gray-500">Be the first to review this movie!</div>';
+        }
+    } catch (e) {
+        console.error("Error fetching movie details:", e);
+    }
+}
+
+function toggleReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    modal.classList.toggle('hidden');
+}
+
+async function submitReview(mId) {
+    const rating = document.getElementById('reviewRating').value;
+    const comment = document.getElementById('reviewComment').value;
+
+    if (!comment.trim()) {
+        alert("Please write a comment for your review.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/movies/${mId}/add_review/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ rating: parseInt(rating), comment: comment })
+        });
+
+        if (res.ok) {
+            alert("Review submitted successfully! 🎉");
+            toggleReviewModal();
+            fetchMovieDetails();
+        } else {
+            const err = await res.json();
+            alert("Error: " + JSON.stringify(err));
+        }
+    } catch (e) {
+        console.error("Error submitting review:", e);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchShowtimes();
+    fetchRecommendations();
+    fetchMovieDetails();
+});
+</script>
+
+</body>
+</html>
